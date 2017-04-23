@@ -4,7 +4,9 @@ This package reverts optimizations that are done by Xcode for PNG files when pac
 
 - Removes CgBI chunks
 - Fixes compressed IDAT chunks  
-- removes alpha pre-multiply 
+- removes alpha pre-multiply
+
+The package does similar things like ipin.py or <code>xcrun -sdk iphoneos pngcrush -revert-iphone-optimizations</code>
 
 ## Installation
 
