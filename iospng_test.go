@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"bytes"
 	"image/png"
+	"image/color"
 )
 
 
@@ -49,5 +50,34 @@ func TestIosPng(t *testing.T) {
 
 	if bString != exp {
 		t.Error("Expected ", bString, " to be ", exp)
+	}
+}
+
+func TestAlphaDemultiply(t *testing.T) {
+	// 100x100 white png with 50 alpha
+	const iOSPngB64 = "iVBORw0KGgoAAAAEQ2dCSVAAIAIr1bN/AAAADUlIRFIAAABkAAAAZAgGAAAAcOKVVAAAAARnQU1BAACxjwv8YQUA" +
+		          "AAABc1JHQgCuzhzpAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJcEhZcwAA" +
+		          "CxMAAAsTAQCanBgAAAAcaURPVAAAAAIAAAAAAAAAMgAAACgAAAAyAAAAMgAAAJD96hyjAAAAXElEQVTs0TEBAAAM" +
+		          "wjCkIx0LO3ekEppUr4oFQAQEiIAAERAgAgJEQAQEiIAAERAgAgJEQAQEiIAAERAgAgJEQAQEiIAAERAgAgJEQAQE" +
+		          "iIAAERAgAgJEQAQEiK4NAAD//yg9d44AAABYSURBVO3RMQEAAAzCMKQjHQs7d6QSmlSvigVABASIgAARECACAkRA" +
+			  "BASIgAARECACAkRABASIgAARECACAkRABASIgAARECACAkRABASIgAARECACAkRABASIrg2mAn5KAAAAAElFTkSuQmCC"
+
+	pngdata, _ := base64.StdEncoding.DecodeString(iOSPngB64)
+	reader := bytes.NewReader(pngdata)
+
+	var w bytes.Buffer;
+
+	PngRevertOptimization(reader, &w)
+
+	decReader := bytes.NewReader(w.Bytes())
+	img, err := png.Decode(decReader)
+	if err != nil {
+		t.Error(err)
+	}
+
+	pixel := color.NRGBAModel.Convert(img.At(50, 50)).(color.NRGBA)
+
+	if pixel.R != 0xff || pixel.G != 0xff || pixel.B != 0xff || pixel.A != 128 {
+		t.Error("Expected color to be white@(128 alpha), got", pixel)
 	}
 }

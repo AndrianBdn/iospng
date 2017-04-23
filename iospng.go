@@ -106,14 +106,24 @@ func rawImageFix(w, h int, raw []byte) error {
 
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
-
+			// we expect this PNG data
+			// to be 4 bytes per pixel
+			// 1st byte in each row is filter
 			row := y*w*4 + y;
 			col := x*4 + 1
 
 			b := raw[row+col+0]
+			g := raw[row+col+1]
 			r := raw[row+col+2]
+			a := raw[row+col+3]
+
+			// de-multiplying
+			r = uint8(float64(r) * 255 / float64(a))
+			g = uint8(float64(g) * 255 / float64(a))
+			b = uint8(float64(b) * 255 / float64(a))
 
 			raw[row+col+0] = r
+			raw[row+col+1] = g
 			raw[row+col+2] = b
 
 		}
@@ -121,6 +131,11 @@ func rawImageFix(w, h int, raw []byte) error {
 	return nil
 }
 
+// This function actually does everything:
+// reads PNG from reader and in case it is iOS-optimized,
+// reverts optimization.
+//
+// Function does not change data if PNG does not have CgBI chunk.
 func PngRevertOptimization(reader io.Reader, writer io.Writer) error {
 	header := make([]byte, 8)
 	if _, err := io.ReadFull(reader, header); err != nil {
