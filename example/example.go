@@ -1,22 +1,26 @@
 package main
 
 import (
-	"image/png"
-	"image/color"
-	"fmt"
 	"bytes"
+	"fmt"
 	"github.com/andrianbdn/iospng"
+	"image/color"
+	"image/png"
+	"log"
 	"os"
 )
 
-
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	src, err := os.Open("./test.png")
 	defer src.Close()
 
 	var w bytes.Buffer
-	iospng.PngRevertOptimization(src, &w)
+	err = iospng.PngRevertOptimization(src, &w)
+	if err != nil {
+		panic(err)
+	}
 
 	pngReader := bytes.NewReader(w.Bytes())
 
