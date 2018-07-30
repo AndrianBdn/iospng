@@ -36,6 +36,13 @@ func PerformRevertOptimizationTest(t *testing.T, base64data string, expectedBoun
 		t.Error(err)
 	}
 
+	reader = bytes.NewReader(pngdata)
+
+	wd, ht, err := PngRevertOptimizationWithSize(reader, &w)
+	if err != nil {
+		t.Error(err)
+	}
+
 	decReader := bytes.NewReader(w.Bytes())
 	img, err := png.Decode(decReader) // crashes if PngRevertOptimization did wrong
 	if err != nil {
@@ -43,6 +50,14 @@ func PerformRevertOptimizationTest(t *testing.T, base64data string, expectedBoun
 	}
 
 	bString := img.Bounds().String()
+
+	if (wd != img.Bounds().Size().X) {
+		t.Error("Bad width")
+	}
+
+	if (ht != img.Bounds().Size().Y) {
+		t.Error("Bad height")
+	}
 
 	if bString != expectedBounds {
 		t.Error("Expected ", bString, " to be ", expectedBounds)

@@ -174,14 +174,14 @@ func rawImageFix(w, h int, interlaced bool, raw []byte) error {
 // reverts optimization.
 //
 // Function does not change data if PNG does not have CgBI chunk.
-func PngRevertOptimization(reader io.Reader, writer io.Writer) error {
+func PngRevertOptimizationWithSize(reader io.Reader, writer io.Writer) (int, int, error) {
 	header := make([]byte, 8)
 	if _, err := io.ReadFull(reader, header); err != nil {
-		return errors.New("Read error" + err.Error())
+		return 0, 0, errors.New("Read error" + err.Error())
 	}
 
 	if bytes.Compare([]byte("\x89PNG\r\n\x1a\n"), header) != 0 {
-		return ErrPngHeader
+		return 0, 0, ErrPngHeader
 	}
 
 	writer.Write(header)
@@ -194,7 +194,7 @@ func PngRevertOptimization(reader io.Reader, writer io.Writer) error {
 	for {
 		var chunk pngChunk
 		if err := chunk.read(reader); err != nil {
-			return err
+			return 0, 0, err
 		}
 
 		switch {
@@ -218,11 +218,11 @@ func PngRevertOptimization(reader io.Reader, writer io.Writer) error {
 			if optimized {
 				raw, err := decodePngData(datbuf.Bytes())
 				if err != nil {
-					return err
+					return 0, 0, err
 				}
 
 				if err = rawImageFix(w, h, interlaced, raw); err != nil {
-					return err
+					return 0, 0, err
 				}
 
 				var zdatbuf bytes.Buffer
@@ -238,18 +238,27 @@ func PngRevertOptimization(reader io.Reader, writer io.Writer) error {
 				chunk.chunkData = []byte{}
 				err = chunk.write(writer, true)
 
-				return nil
+				return w, h, nil
 			} else {
-				return chunk.write(writer, false)
+				return w, h, chunk.write(writer, false)
 			}
 
 		}
 
 		if err := chunk.write(writer, false); err != nil {
-			return err
+			return 0, 0, err
 		}
 
 	}
 
-	return nil
+	return w, h, nil
 }
+
+// old, compatible version 
+func PngRevertOptimization(reader io.Reader, writer io.Writer) error {
+	_, _, err := PngRevertOptimizationWithSize(reader, writer)
+	return err 
+}
+
+
+

@@ -20,16 +20,25 @@ To install it, run:
 
 ## Usage
 
-#### func  PngRevertOptimization
+#### func PngRevertOptimizationWithSize
 
+```go
+func PngRevertOptimizationWithSize(reader io.Reader, writer io.Writer) (int, int, error)
+```
+
+This function actually does everything: reads PNG from reader and in case it is iOS-optimized, reverts optimization. 
+Function does not change data if PNG does not have CgBI chunk.
+
+First two return parameters (ints) are PNG width and height.
+
+#### func PngRevertOptimization
 
 ```go
 func PngRevertOptimization(reader io.Reader, writer io.Writer) error
 ```
 
-This function actually does everything: reads PNG from reader and in case it is iOS-optimized, reverts optimization. 
-Function does not change data if PNG does not have CgBI chunk.
- 
+Old-style function that does not return size also available.
+
  
 ## See also 
 
